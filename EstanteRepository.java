@@ -1,8 +1,11 @@
 package br.edu.ifpb.escola.repository;
+
+import br.edu.ifpb.escola.model.entity.Estudante;
 import org.springframework.data.jpa.repository.JpaRepository;
-import br.edu.ifpb.escola.model.entity.Disciplina;
+import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
-
-public interface EstanteRepository  extends JpaRepository<Disciplina, Long> {
-
+@Repository
+public interface EstanteRepository extends JpaRepository<Estudante, Long> {
+    Optional<Estudante> findByMatricula(int matricula);
 }
