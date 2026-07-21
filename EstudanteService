@@ -1,0 +1,76 @@
+package br.edu.ifpb.escola.business.service;
+
+import br.edu.ifpb.escola.business.dto.EstudanteDTO;
+import br.edu.ifpb.escola.model.entity.Estudante;
+import br.edu.ifpb.escola.repository.EstanteRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class EstudanteService {
+
+    @Autowired
+    private EstanteRepository repository;
+
+    @Autowired
+    private PrinterService printer;
+
+    @Autowired
+    private ValidationService validationService;
+
+    public void cadastrar(EstudanteDTO dto) {
+        if (!validationService.isEstudanteValido(dto, printer)) return;
+        if (repository.findByMatricula(dto.getMatricula()).isPresent()) {
+            printer.erro("Matrícula já cadastrada!");
+            return;
+        }
+        Estudante estudante = new Estudante(dto.getMatricula(), dto.getNome(), dto.getIdade(), dto.getContato());
+        repository.save(estudante);
+        printer.sucesso("Estudante cadastrado com sucesso!");
+    }
+
+    public EstudanteDTO buscar(int matricula) {
+        Optional<Estudante> optional = repository.findByMatricula(matricula);
+        if (optional.isEmpty()) {
+            printer.erro("Estudante com matrícula " + matricula + " não encontrado!");
+            return null;
+        }
+        Estudante e = optional.get();
+        return new EstudanteDTO(e.getMatricula(), e.getNome(), e.getIdade(), e.getContato());
+    }
+
+    public void exibirEstudante(int matricula) {
+        EstudanteDTO dto = buscar(matricula);
+        if (dto != null) printer.imprimirEstudante(dto);
+    }
+
+    public void editar(EstudanteDTO dto) {
+        if (!validationService.isEstudanteValido(dto, printer)) return;
+        Optional<Estudante> optional = repository.findByMatricula(dto.getMatricula());
+        if (optional.isEmpty()) {
+            printer.erro("Estudante não encontrado!");
+            return;
+        }
+        Estudante existente = optional.get();
+        existente.setNome(dto.getNome());
+        existente.setIdade(dto.getIdade());
+        existente.setContato(dto.getContato());
+        repository.save(existente);
+        printer.sucesso("Estudante atualizado com sucesso!");
+    }
+
+    public boolean existeEstudante(int matricula) {
+        return repository.findByMatricula(matricula).isPresent();
+    }
+
+    public Estudante buscarModelo(int matricula) {
+        return repository.findByMatricula(matricula).orElse(null);
+    }
+
+    public void exibirLista() {
+        List<Estudante> estudantes = repository.findAll();
+        printer.listarEstudantes(estudantes);
+    }
+}
